@@ -1,67 +1,36 @@
 defmodule ArtifactsMmog.Planner do
   @moduledoc """
-  HTN planning for ArtifactsMMO characters via Taskweft.
+  HTN planning execution for ArtifactsMMO.
 
-  Builds a JSON-LD domain from the current character state and goals,
-  runs the planner, then executes each step against the REST API.
+  Use `ArtifactsMmog.Domain.build/2` to produce the domain JSON,
+  then `Taskweft.plan/1` to get a plan, then `execute/2` here to run it.
+  `run/2` combines all three steps in one call.
   """
 
-  alias ArtifactsMmog.API
+  alias ArtifactsMmog.{API, Domain}
 
   @doc """
-  Build a domain JSON-LD document from character state and a goal list.
-  Goals are maps like %{type: "fight", target: "chicken"} etc.
+  Plan and execute one episode for `char_name` toward `tasks`.
+
+  `tasks` is a list of `[method, arg, ...]` arrays passed to `Domain.build/2`.
+  Returns `{:ok, results}` or `{:error, reason}`.
   """
-  def build_domain(character, goals) do
-    state = character_to_state(character)
-
-    domain = %{
-      "@context" => "https://taskweft.schema/v1",
-      "domain" => "artifacts_mmog",
-      "state" => state,
-      "goal" => goals,
-      "methods" => methods(),
-      "operators" => operators()
-    }
-
-    Jason.encode!(domain)
-  end
-
-  @doc """
-  Plan and execute goals for the named character.
-  Returns {:ok, results} or {:error, reason}.
-  """
-  def run(char_name, goals) do
-    with %{"data" => char} <- API.my_characters(),
-         character <- find_character(char, char_name),
-         domain_json <- build_domain(character, goals),
-         {:ok, plan_json} <- Taskweft.plan(domain_json) do
-      plan = Jason.decode!(plan_json)
-      execute_plan(char_name, plan)
+  def run(char_name, tasks) do
+    with {:ok, char}     <- fetch_char(char_name),
+         domain_json     <- Domain.build(char, tasks),
+         {:ok, plan_json} <- Taskweft.plan(domain_json),
+         {:ok, plan}     <- Jason.decode(plan_json) do
+      execute(char_name, plan)
     end
   end
 
-  # --- Private ---
-
-  defp find_character(chars, name) when is_list(chars),
-    do: Enum.find(chars, fn c -> c["name"] == name end) || %{}
-  defp find_character(_, _), do: %{}
-
-  defp character_to_state(char) do
-    %{
-      "hp" => char["hp"] || 0,
-      "max_hp" => char["max_hp"] || 100,
-      "x" => char["x"] || 0,
-      "y" => char["y"] || 0,
-      "level" => char["level"] || 1,
-      "gold" => char["gold"] || 0,
-      "inventory" => char["inventory"] || []
-    }
-  end
-
-  defp execute_plan(char_name, steps) do
+  @doc """
+  Execute an already-decoded plan (list of `[action, arg, ...]` steps).
+  """
+  def execute(char_name, steps) do
     results =
       Enum.map(steps, fn [action | args] ->
+        IO.puts("[Planner] #{action}(#{Enum.join(args, ", ")})")
         result = dispatch(char_name, action, args)
         maybe_cooldown(result)
         {action, result}
@@ -70,45 +39,51 @@ defmodule ArtifactsMmog.Planner do
     {:ok, results}
   end
 
-  defp dispatch(name, "move", [x, y]), do: API.move(name, x, y)
-  defp dispatch(name, "fight", []), do: API.fight(name)
-  defp dispatch(name, "gather", []), do: API.gather(name)
-  defp dispatch(name, "rest", []), do: API.rest(name)
-  defp dispatch(name, "craft", [code | rest]) do
-    qty = List.first(rest, 1)
-    API.craft(name, code, qty)
+  # ---------------------------------------------------------------------------
+  # Private
+  # ---------------------------------------------------------------------------
+
+  defp fetch_char(name) do
+    case API.my_characters() do
+      %{"data" => chars} when is_list(chars) ->
+        case Enum.find(chars, &(&1["name"] == name)) do
+          nil  -> {:error, "character #{name} not found"}
+          char -> {:ok, char}
+        end
+      other ->
+        {:error, "API error: #{inspect(other)}"}
+    end
   end
+
+  defp dispatch(name, "a_move", [_char, zone_id]) do
+    zone_int = trunc_zone(zone_id)
+    case Domain.zone_coords(zone_int) do
+      {x, y} -> API.move(name, x, y)
+      nil    -> %{"error" => "unknown zone id #{zone_id}"}
+    end
+  end
+
+  defp dispatch(name, "a_gather",        [_char | _]), do: API.gather(name)
+  defp dispatch(name, "a_fight",         [_char | _]), do: API.fight(name)
+  defp dispatch(name, "a_rest",          [_char | _]), do: API.rest(name)
+  defp dispatch(name, "a_accept_task",   [_char | _]), do: API.accept_task(name)
+  defp dispatch(name, "a_complete_task", [_char | _]), do: API.complete_task(name)
+
+  defp dispatch(name, "a_bank_deposit", [_char | _]) do
+    API.deposit_all(name)
+  end
+
   defp dispatch(name, action, args) do
-    %{"error" => "unknown action #{action}", "args" => args, "character" => name}
+    IO.puts("[Planner] unknown action: #{action}(#{Enum.join(inspect(args), ", ")})")
+    %{"error" => "unknown action #{action}", "character" => name}
   end
+
+  defp trunc_zone(id) when is_integer(id), do: id
+  defp trunc_zone(id) when is_float(id), do: trunc(id)
+  defp trunc_zone(id) when is_binary(id), do: String.to_integer(id)
 
   defp maybe_cooldown(%{"data" => %{"cooldown" => %{"remaining_seconds" => secs}}})
-       when secs > 0,
+       when is_number(secs) and secs > 0,
        do: Process.sleep(trunc(secs * 1000))
   defp maybe_cooldown(_), do: :ok
-
-  defp methods do
-    [
-      %{
-        "name" => "fight_until_full_hp",
-        "preconditions" => [%{"hp_lt_max" => true}],
-        "subtasks" => [["rest"], ["fight"]]
-      },
-      %{
-        "name" => "go_gather",
-        "preconditions" => [],
-        "subtasks" => [["gather"]]
-      }
-    ]
-  end
-
-  defp operators do
-    [
-      %{"name" => "move", "params" => ["x", "y"]},
-      %{"name" => "fight", "params" => []},
-      %{"name" => "gather", "params" => []},
-      %{"name" => "rest", "params" => []},
-      %{"name" => "craft", "params" => ["code", "quantity"]}
-    ]
-  end
 end

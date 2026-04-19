@@ -66,6 +66,28 @@ defmodule ArtifactsMmog.API do
   def ge_sell(name, code, quantity, price),
     do: post("/my/#{name}/action/grandexchange/sell", %{code: code, quantity: quantity, price: price})
 
+  # --- Bank helpers ---
+
+  def deposit_all(name) do
+    case my_characters() do
+      %{"data" => chars} when is_list(chars) ->
+        char = Enum.find(chars, &(&1["name"] == name)) || %{}
+        inventory = char["inventory"] || []
+
+        results =
+          inventory
+          |> Enum.reject(&(is_nil(&1) or &1["code"] == nil or &1["quantity"] == 0))
+          |> Enum.map(fn %{"code" => code, "quantity" => qty} ->
+            bank_deposit(name, code, qty)
+          end)
+
+        %{"deposited" => length(results)}
+
+      other ->
+        %{"error" => "could not fetch character for deposit_all: #{inspect(other)}"}
+    end
+  end
+
   # --- Tasks ---
 
   def accept_task(name), do: post("/my/#{name}/action/task/new")
