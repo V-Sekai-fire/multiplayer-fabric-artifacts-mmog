@@ -5,5 +5,5 @@
 /.fetch
 erl_crash.dump
 *.ez
-artifacts_mmog
+/artifacts_mmog
 /tmp/
