@@ -1,0 +1,51 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: "1.17"
+          otp-version: "27"
+
+      - name: Cache deps
+        uses: actions/cache@v4
+        with:
+          path: deps
+          key: deps-${{ hashFiles('mix.lock') }}
+
+      - name: Install deps
+        run: mix deps.get --only prod
+
+      - name: Build escript
+        run: MIX_ENV=prod mix escript.build
+
+      - name: Create Windows zip
+        run: |
+          printf '@echo off\nescript "%%~dp0artifacts_mmog" %%*\n' > artifacts_mmog.bat
+          zip artifacts-mmog-windows.zip artifacts_mmog artifacts_mmog.bat
+
+      - name: Compute hashes
+        run: |
+          sha256sum artifacts_mmog | tee artifacts_mmog.sha256
+          sha256sum artifacts-mmog-windows.zip | tee artifacts-mmog-windows.sha256
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts_mmog
+            artifacts_mmog.sha256
+            artifacts-mmog-windows.zip
+            artifacts-mmog-windows.sha256
