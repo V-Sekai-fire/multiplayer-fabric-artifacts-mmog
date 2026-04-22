@@ -1,13 +1,13 @@
 defmodule ArtifactsMmogTest do
   use ExUnit.Case
 
-  test "build_domain produces valid JSON" do
+  test "Domain.build/2 produces valid JSON with correct name and hp variable" do
     char = %{"name" => "hero", "hp" => 80, "max_hp" => 100, "x" => 0, "y" => 0,
-              "level" => 1, "gold" => 0, "inventory" => []}
-    goals = [%{"type" => "fight"}]
-    json = ArtifactsMmog.Planner.build_domain(char, goals)
+             "task" => "", "inventory" => [], "inventory_max_items" => 100}
+    json = ArtifactsMmog.Domain.build(char, [])
     assert {:ok, decoded} = Jason.decode(json)
-    assert decoded["domain"] == "artifacts_mmog"
-    assert decoded["state"]["hp"] == 80
+    assert decoded["name"] == "artifacts_mmog"
+    hp_var = Enum.find(decoded["variables"], & &1["name"] == "hp")
+    assert hp_var["init"]["hero"] == 80
   end
 end

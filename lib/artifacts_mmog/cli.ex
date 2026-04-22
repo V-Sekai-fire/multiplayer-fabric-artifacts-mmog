@@ -1,21 +1,16 @@
 defmodule ArtifactsMmog.CLI do
   @moduledoc """
-  Escript entry point.
+  CLI entry point (via mix run -e 'ArtifactsMmog.CLI.main([...])').
 
   Commands:
-    artifacts_mmog tui                       # launch TUI
-    artifacts_mmog status                    # print server status
-    artifacts_mmog run <char> <goal>         # continuous game loop
-    artifacts_mmog plan <char> <goal_json>   # one-shot HTN plan (raw tasks JSON)
-    artifacts_mmog goals                     # list available goals
+    status                    # print server status
+    run <char> <goal>         # continuous game loop
+    plan <char> <goal_json>   # one-shot HTN plan (raw tasks JSON)
+    goals                     # list available goals
   """
 
   def main(args) do
     case args do
-      ["tui"] ->
-        {:ok, _pid} = ArtifactsMmog.TUI.start_link([])
-        Process.sleep(:infinity)
-
       ["status"] ->
         ArtifactsMmog.API.status() |> Jason.encode!(pretty: true) |> IO.puts()
 
@@ -50,7 +45,6 @@ defmodule ArtifactsMmog.CLI do
         ArtifactsMMO Multiplayer Fabric Agent
 
         Commands:
-          tui                         Launch interactive TUI
           status                      Print server status
           goals                       List available goals
           run <char> <goal>           Continuous farming/fighting loop

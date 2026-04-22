@@ -44,7 +44,7 @@ defmodule ArtifactsMmog.Domain do
 
   def zone_coords(id), do: @zone_id_to_coords[id]
 
-  def zone_for_pos(x, y), do: @zone_coords_to_id[{x, y}] || 99
+  def zone_for_pos(x, y), do: @zone_coords_to_id[{x, y}] || @bank_id
 
   def bank_id, do: @bank_id
   def task_master_id, do: @task_master_id
