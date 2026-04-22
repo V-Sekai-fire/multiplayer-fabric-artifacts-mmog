@@ -5,7 +5,7 @@
   },
   "@type": "domain:Definition",
   "name": "artifacts_mmog_adventurer",
-  "description": "Adventurer persona for ArtifactsMMO. One episode: accept task → rest → fight goblins (5x) → farm copper (3x) → bank → complete task. Zone enum and action set match ArtifactsMmog.Domain.build/2 exactly.",
+  "description": "Adventurer persona for ArtifactsMMO. One episode: accept task → rest → fight chickens (5x) → farm copper (3x) → bank → complete task. Zone enum and action set match ArtifactsMmog.Domain.build/2 exactly.",
   "enums": {
     "zone": {
       "bank":         0,
@@ -18,7 +18,7 @@
       "sunflowers":   7,
       "chickens":     8,
       "pigs":         9,
-      "goblins":      8,
+      "goblins":      10,
       "wolverines":   11,
       "gudgeon":      12,
       "task_master":  13
