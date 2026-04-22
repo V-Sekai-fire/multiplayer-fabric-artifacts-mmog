@@ -6,7 +6,7 @@ defmodule ArtifactsMmog.Runner do
   The loop continues until `:max_iterations` is reached or the process is killed.
   """
 
-  alias ArtifactsMmog.{API, Domain, Planner}
+  alias ArtifactsMmog.{Domain, Planner}
 
   @goals %{
     farm_copper:      ["farm_resources", :copper_rocks],
@@ -75,13 +75,7 @@ defmodule ArtifactsMmog.Runner do
   end
 
   defp step(char_name, goal) do
-    with {:ok, char}    <- fetch_char(char_name),
-         tasks          <- build_tasks(goal, char["name"]),
-         domain_json    <- Domain.build(char, tasks),
-         {:ok, plan_json} <- Taskweft.plan(domain_json),
-         {:ok, plan}    <- Jason.decode(plan_json) do
-      Planner.execute(char_name, plan)
-    end
+    Planner.run(char_name, build_tasks(goal, char_name))
   end
 
   defp build_tasks(goal, char_name) do
@@ -92,15 +86,4 @@ defmodule ArtifactsMmog.Runner do
     end
   end
 
-  defp fetch_char(name) do
-    case API.my_characters() do
-      %{"data" => chars} when is_list(chars) ->
-        case Enum.find(chars, &(&1["name"] == name)) do
-          nil  -> {:error, "character #{name} not found"}
-          char -> {:ok, char}
-        end
-      other ->
-        {:error, "API error: #{inspect(other)}"}
-    end
-  end
 end
