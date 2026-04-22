@@ -2,12 +2,22 @@ defmodule ArtifactsMmog do
   @moduledoc """
   Multiplayer Fabric agent for ArtifactsMMO (https://www.artifactsmmo.com/).
 
-  Combines:
-  - `ArtifactsMmog.API`     — REST client for the ArtifactsMMO API
-  - `ArtifactsMmog.Planner` — HTN planning via Taskweft
-  - `ArtifactsMmog.TUI`     — ex_ratatui terminal UI
-  - `ArtifactsMmog.CLI`     — escript entry point
+  - `ArtifactsMmog.API`     — REST client (move, fight, gather, rest, tasks)
+  - `ArtifactsMmog.Domain`  — HTN domain builder; maps live character state to Taskweft JSON
+  - `ArtifactsMmog.Planner` — fetch → plan → execute one episode
+  - `ArtifactsMmog.Runner`  — continuous goal loop with retry
 
-  Set `ARTIFACTS_TOKEN` env var to your API token before running.
+  ## Usage
+
+      # List available goals
+      mix artifacts_mmog.goals
+
+      # Run a continuous loop (Ctrl-C to stop)
+      ARTIFACTS_TOKEN=... mix artifacts_mmog.run Aria fight_chickens
+
+      # Run N iterations
+      ARTIFACTS_TOKEN=... mix artifacts_mmog.run Aria farm_copper 10
+
+  Set `ARTIFACTS_TOKEN` to your ArtifactsMMO API bearer token.
   """
 end
