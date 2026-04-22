@@ -27,13 +27,6 @@ defmodule ArtifactsMmog.Runner do
   def goals, do: Map.keys(@goals)
 
   @doc """
-  Select the appropriate combat zone for a character's level.
-  """
-  def combat_zone_for_level(level) when level < 5,  do: :chickens
-  def combat_zone_for_level(level) when level < 10, do: :goblins
-  def combat_zone_for_level(_level),                do: :wolverines
-
-  @doc """
   Run a goal loop for `char_name`.
 
   Options:
