@@ -1,10 +1,8 @@
 # Contributing
 
-An Elixir CLI / TUI tool for managing MMOG artifacts — asset upload,
-S3 streaming, and artifact lifecycle — built on `ex_ratatui` for the
-terminal interface and `req` for HTTP.  Ships as a self-contained
-escript binary.  Depends on `taskweft` for planning state and follows
-the same red-green-refactor discipline.
+An Elixir mix application for running ArtifactsMMO characters — farming,
+fighting, and task cycles — built on `taskweft` for HTN planning and `req`
+for HTTP. Follows red-green-refactor discipline.
 
 Built strictly red-green-refactor: every feature is driven by a failing
 test, committed when green, then any cleanup is done with the test
@@ -18,40 +16,45 @@ still green.
 - **Error tuples, not exceptions.** All boundary functions return
   `{:ok, value}` / `{:error, reason}`.  `raise` is reserved for
   programmer errors (wrong argument type, missing config at boot).
-  HTTP and S3 errors are always `{:error, _}` tuples propagated to
-  the caller.
-- **TUI state is pure.** Ratatui rendering functions take a model and
-  return a new model; they must not perform I/O.  Side effects
-  (uploads, API calls) happen in `Task` calls that send messages back
-  to the TUI loop.
-- **Escript portability.** The compiled binary must run on a machine
-  with no Elixir installed.  Avoid runtime dependencies that are not
-  bundled — check `mix escript.build` and run the output binary in a
-  fresh environment before releasing.
+  HTTP errors are always `{:error, _}` tuples propagated to the caller.
 - **Commit every green.** One commit per feature cycle.
 
 ## Workflow
 
 ```
 mix deps.get
-mix test                  # run ExUnit suite
-mix escript.build         # produce ./artifacts_mmog binary
-./artifacts_mmog --help   # smoke test
+mix test                                       # run ExUnit suite
+mix artifacts_mmog.goals                       # list available goals
+ARTIFACTS_TOKEN=... mix artifacts_mmog.run Aria fight_chickens
+ARTIFACTS_TOKEN=... mix artifacts_mmog.run Aria farm_copper 10
+```
+
+## Mix tasks
+
+| Task | Description |
+|------|-------------|
+| `mix artifacts_mmog.goals` | List all valid goal names |
+| `mix artifacts_mmog.run <char> <goal>` | Continuous loop until Ctrl-C |
+| `mix artifacts_mmog.run <char> <goal> <n>` | Run exactly N iterations |
+| `mix artifacts_mmog.status` | Print server status JSON |
+
+## Environment
+
+```
+ARTIFACTS_TOKEN   Your ArtifactsMMO API bearer token
 ```
 
 ## Design notes
 
-### TUI / async split
+### Planning loop
 
-Long-running operations (S3 uploads, HTTP calls) are spawned with
-`Task.async` and their results sent as messages to the GenServer that
-owns TUI state.  The render loop is synchronous and never blocks on
-I/O.  This keeps the terminal responsive during large uploads.
+Each iteration: fetch live character state → build HTN domain JSON
+(`Domain.build/2`) → plan via `Taskweft.plan/1` → execute steps
+(`Planner.execute/2`). `Runner` owns the retry loop; `Planner` owns
+the single fetch→build→plan→execute cycle.
 
-### S3 integration
+### Zone IDs
 
-Uploads go through `req` with streaming body support.  Retry logic
-lives in a dedicated module; the TUI layer only observes progress
-events, never retries directly.  Credentials come from environment
-variables (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`,
-`AWS_ENDPOINT_URL`) — never hardcoded or committed.
+Zone coordinates are compile-time constants in `Domain.@zones`. Unknown
+positions fall back to `bank_id` (zone 0). `combat_zone_for_level/1` in
+`Runner` selects the appropriate combat zone by character level.
