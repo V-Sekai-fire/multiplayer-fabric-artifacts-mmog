@@ -6,6 +6,14 @@ defmodule ArtifactsMmogTest do
     assert [{_action, %{"error" => _}}] = results
   end
 
+  test "Domain.build/2 includes rest_at_bank method" do
+    char = %{"name" => "hero", "hp" => 50, "max_hp" => 100, "x" => 0, "y" => 0,
+             "task" => "", "inventory" => [], "inventory_max_items" => 100}
+    json = ArtifactsMmog.Domain.build(char, [["rest_at_bank", "hero"]])
+    {:ok, decoded} = Jason.decode(json)
+    assert Map.has_key?(decoded["methods"], "rest_at_bank")
+  end
+
   test "Domain.build/2 produces valid JSON with correct name and hp variable" do
     char = %{"name" => "hero", "hp" => 80, "max_hp" => 100, "x" => 0, "y" => 0,
              "task" => "", "inventory" => [], "inventory_max_items" => 100}

@@ -233,6 +233,18 @@ defmodule ArtifactsMmog.Domain do
         ]
       },
 
+      # Go to bank and rest to full HP — safe idle state.
+      "rest_at_bank" => %{
+        "params" => ["char"],
+        "alternatives" => [
+          %{"name"     => "safe",
+            "subtasks" => [
+              ["go_to_bank",    "{char}"],
+              ["ensure_rested", "{char}"]
+            ]}
+        ]
+      },
+
       # Accept a task (bank first), or complete if one is active.
       "task_cycle" => %{
         "params" => ["char"],

@@ -21,7 +21,8 @@ defmodule ArtifactsMmog.Runner do
     fight_goblins:    ["fight_monsters", :goblins],
     fight_wolverines: ["fight_monsters", :wolverines],
     fish_gudgeon:     ["farm_resources", :gudgeon],
-    task_cycle:       ["task_cycle"]
+    task_cycle:       ["task_cycle"],
+    rest_at_bank:     ["rest_at_bank"]
   }
 
   def goals, do: Map.keys(@goals)
@@ -76,6 +77,7 @@ defmodule ArtifactsMmog.Runner do
       ["farm_resources", zone] -> [["farm_resources", char_name, Domain.zone_id(zone)]]
       ["fight_monsters", zone] -> [["fight_monsters", char_name, Domain.zone_id(zone)]]
       ["task_cycle"]           -> [["task_cycle", char_name]]
+      ["rest_at_bank"]         -> [["rest_at_bank", char_name]]
     end
   end
 
