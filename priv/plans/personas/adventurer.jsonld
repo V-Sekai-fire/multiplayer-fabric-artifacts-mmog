@@ -5,32 +5,32 @@
   },
   "@type": "domain:Definition",
   "name": "artifacts_mmog_adventurer",
-  "description": "Adventurer persona for ArtifactsMMO. One episode: accept task → rest → fight chickens (5x) → farm copper (3x) → bank → complete task. Zone enum and action set match ArtifactsMmog.Domain.build/2 exactly.",
+  "description": "Adventurer persona for ArtifactsMMO. One episode: task_cycle (accept) → fight chickens → farm copper → bank → task_cycle (complete). Zone enum and action set match ArtifactsMmog.Domain.build/2 exactly.",
   "enums": {
     "zone": {
-      "bank":         0,
+      "bank": 0,
       "copper_rocks": 1,
-      "iron_rocks":   2,
-      "coal_rocks":   3,
-      "ash_trees":    4,
-      "birch_trees":  5,
+      "iron_rocks": 2,
+      "coal_rocks": 3,
+      "ash_trees": 4,
+      "birch_trees": 5,
       "spruce_trees": 6,
-      "sunflowers":   7,
-      "chickens":     8,
-      "pigs":         9,
-      "goblins":      10,
-      "wolverines":   11,
-      "gudgeon":      12,
-      "task_master":  13
+      "sunflowers": 7,
+      "chickens": 8,
+      "pigs": 9,
+      "goblins": 10,
+      "wolverines": 11,
+      "gudgeon": 12,
+      "task_master": 13
     }
   },
   "variables": [
-    {"name": "zone",      "init": {"adventurer": 0}},
-    {"name": "hp",        "init": {"adventurer": 80}},
-    {"name": "max_hp",    "init": {"adventurer": 80}},
+    {"name": "zone", "init": {"adventurer": 0}},
+    {"name": "hp", "init": {"adventurer": 80}},
+    {"name": "max_hp", "init": {"adventurer": 80}},
     {"name": "inv_count", "init": {"adventurer": 0}},
-    {"name": "inv_max",   "init": {"adventurer": 80}},
-    {"name": "has_task",  "init": {"adventurer": 0}}
+    {"name": "inv_max", "init": {"adventurer": 80}},
+    {"name": "has_task", "init": {"adventurer": 0}}
   ],
   "actions": {
     "a_move": {
@@ -42,10 +42,14 @@
       "bind": [{"name": "imax", "pointer": "/inv_max/{char}"}],
       "body": [
         {"check": "/inv_count/{char}", "lt": "{imax}"},
-        {"set": "/inv_count/{char}",
-         "value": {"type": "math/add",
-                   "a": {"type": "pointer/get", "pointer": "/inv_count/{char}"},
-                   "b": 1}}
+        {
+          "set": "/inv_count/{char}",
+          "value": {
+            "op": "add",
+            "a": {"op": "get", "pointer": "/inv_count/{char}"},
+            "b": 1
+          }
+        }
       ]
     },
     "a_fight": {
@@ -54,8 +58,9 @@
     },
     "a_rest": {
       "params": ["char"],
-      "body": [{"set": "/hp/{char}",
-                "value": {"type": "pointer/get", "pointer": "/max_hp/{char}"}}]
+      "body": [
+        {"set": "/hp/{char}", "value": {"op": "get", "pointer": "/max_hp/{char}"}}
+      ]
     },
     "a_bank_deposit": {
       "params": ["char"],
@@ -67,17 +72,17 @@
     "a_accept_task": {
       "params": ["char"],
       "body": [
-        {"check": "/zone/{char}",     "eq": 13},
+        {"check": "/zone/{char}", "eq": 13},
         {"check": "/has_task/{char}", "eq": 0},
-        {"set":   "/has_task/{char}", "value": 1}
+        {"set": "/has_task/{char}", "value": 1}
       ]
     },
     "a_complete_task": {
       "params": ["char"],
       "body": [
-        {"check": "/zone/{char}",     "eq": 13},
+        {"check": "/zone/{char}", "eq": 13},
         {"check": "/has_task/{char}", "eq": 1},
-        {"set":   "/has_task/{char}", "value": 0}
+        {"set": "/has_task/{char}", "value": 0}
       ]
     }
   },
@@ -85,84 +90,136 @@
     "go_to_bank": {
       "params": ["char"],
       "alternatives": [
-        {"name": "already_there",
-         "check":    [{"pointer": "/zone/{char}", "eq": 0}],
-         "subtasks": []},
-        {"name": "travel",
-         "subtasks": [["a_move", "{char}", 0]]}
+        {
+          "name": "already_there",
+          "check": [{"pointer": "/zone/{char}", "eq": 0}],
+          "subtasks": []
+        },
+        {"name": "travel", "subtasks": [["a_move", "{char}", 0]]}
       ]
     },
     "ensure_rested": {
       "params": ["char"],
       "alternatives": [
-        {"name": "hp_full",
-         "bind":    [{"name": "mhp", "pointer": "/max_hp/{char}"}],
-         "check":   [{"pointer": "/hp/{char}", "ge": "{mhp}"}],
-         "subtasks": []},
-        {"name": "rest_first",
-         "subtasks": [["a_rest", "{char}"]]}
+        {
+          "name": "hp_full",
+          "bind": [{"name": "mhp", "pointer": "/max_hp/{char}"}],
+          "check": [{"pointer": "/hp/{char}", "ge": "{mhp}"}],
+          "subtasks": []
+        },
+        {"name": "rest_first", "subtasks": [["a_rest", "{char}"]]}
       ]
     },
     "bank_if_full": {
       "params": ["char"],
       "alternatives": [
-        {"name": "has_space",
-         "bind":    [{"name": "imax", "pointer": "/inv_max/{char}"}],
-         "check":   [{"pointer": "/inv_count/{char}", "lt": "{imax}"}],
-         "subtasks": []},
-        {"name": "deposit",
-         "subtasks": [["go_to_bank", "{char}"], ["a_bank_deposit", "{char}"]]}
+        {
+          "name": "has_space",
+          "bind": [{"name": "imax", "pointer": "/inv_max/{char}"}],
+          "check": [{"pointer": "/inv_count/{char}", "lt": "{imax}"}],
+          "subtasks": []
+        },
+        {
+          "name": "deposit",
+          "subtasks": [["go_to_bank", "{char}"], ["a_bank_deposit", "{char}"]]
+        }
+      ]
+    },
+    "farm_resources": {
+      "params": ["char", "zone_id"],
+      "alternatives": [
+        {
+          "name": "batch",
+          "subtasks": [
+            ["bank_if_full", "{char}"],
+            ["a_move", "{char}", "{zone_id}"],
+            ["a_gather", "{char}"],
+            ["a_gather", "{char}"],
+            ["a_gather", "{char}"],
+            ["a_gather", "{char}"],
+            ["a_gather", "{char}"]
+          ]
+        }
+      ]
+    },
+    "fight_monsters": {
+      "params": ["char", "zone_id"],
+      "alternatives": [
+        {
+          "name": "batch",
+          "subtasks": [
+            ["ensure_rested", "{char}"],
+            ["bank_if_full", "{char}"],
+            ["a_move", "{char}", "{zone_id}"],
+            ["a_fight", "{char}"],
+            ["a_fight", "{char}"],
+            ["a_fight", "{char}"],
+            ["a_fight", "{char}"],
+            ["a_fight", "{char}"]
+          ]
+        }
+      ]
+    },
+    "rest_at_bank": {
+      "params": ["char"],
+      "alternatives": [
+        {
+          "name": "safe",
+          "subtasks": [
+            ["go_to_bank", "{char}"],
+            ["ensure_rested", "{char}"]
+          ]
+        }
+      ]
+    },
+    "task_cycle": {
+      "params": ["char"],
+      "alternatives": [
+        {
+          "name": "accept",
+          "check": [{"pointer": "/has_task/{char}", "eq": 0}],
+          "subtasks": [
+            ["go_to_bank", "{char}"],
+            ["a_bank_deposit", "{char}"],
+            ["a_move", "{char}", 13],
+            ["a_accept_task", "{char}"]
+          ]
+        },
+        {
+          "name": "complete",
+          "check": [{"pointer": "/has_task/{char}", "eq": 1}],
+          "subtasks": [
+            ["a_move", "{char}", 13],
+            ["a_complete_task", "{char}"]
+          ]
+        }
       ]
     },
     "adventurer_episode": {
-      "description": "One full adventurer episode. Accepts a task if none is active, fights chickens, farms copper, banks, then completes the task.",
+      "description": "One full adventurer episode: accept task, fight chickens, farm copper, bank, complete task.",
       "params": ["char"],
       "alternatives": [
         {
           "name": "fresh",
           "check": [{"pointer": "/has_task/{char}", "eq": 0}],
           "subtasks": [
-            ["a_move",          "{char}", 13],
-            ["a_accept_task",   "{char}"],
-            ["ensure_rested",   "{char}"],
-            ["a_move",          "{char}", 8],
-            ["a_fight",         "{char}"],
-            ["a_fight",         "{char}"],
-            ["a_fight",         "{char}"],
-            ["a_fight",         "{char}"],
-            ["a_fight",         "{char}"],
-            ["bank_if_full",    "{char}"],
-            ["a_move",          "{char}", 1],
-            ["a_gather",        "{char}"],
-            ["a_gather",        "{char}"],
-            ["a_gather",        "{char}"],
-            ["go_to_bank",      "{char}"],
-            ["a_bank_deposit",  "{char}"],
-            ["a_move",          "{char}", 13],
-            ["a_complete_task", "{char}"]
+            ["task_cycle", "{char}"],
+            ["fight_monsters", "{char}", 8],
+            ["farm_resources", "{char}", 1],
+            ["go_to_bank", "{char}"],
+            ["a_bank_deposit", "{char}"],
+            ["task_cycle", "{char}"]
           ]
         },
         {
           "name": "ongoing",
           "check": [{"pointer": "/has_task/{char}", "eq": 1}],
           "subtasks": [
-            ["ensure_rested",   "{char}"],
-            ["bank_if_full",    "{char}"],
-            ["a_move",          "{char}", 8],
-            ["a_fight",         "{char}"],
-            ["a_fight",         "{char}"],
-            ["a_fight",         "{char}"],
-            ["a_fight",         "{char}"],
-            ["a_fight",         "{char}"],
-            ["bank_if_full",    "{char}"],
-            ["a_move",          "{char}", 1],
-            ["a_gather",        "{char}"],
-            ["a_gather",        "{char}"],
-            ["a_gather",        "{char}"],
-            ["go_to_bank",      "{char}"],
-            ["a_bank_deposit",  "{char}"],
-            ["a_move",          "{char}", 13],
-            ["a_complete_task", "{char}"]
+            ["fight_monsters", "{char}", 8],
+            ["farm_resources", "{char}", 1],
+            ["go_to_bank", "{char}"],
+            ["a_bank_deposit", "{char}"],
+            ["task_cycle", "{char}"]
           ]
         }
       ]
