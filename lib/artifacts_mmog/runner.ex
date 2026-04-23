@@ -9,20 +9,20 @@ defmodule ArtifactsMmog.Runner do
   alias ArtifactsMmog.{Domain, Planner}
 
   @goals %{
-    farm_copper:      ["farm_resources", :copper_rocks],
-    farm_iron:        ["farm_resources", :iron_rocks],
-    farm_coal:        ["farm_resources", :coal_rocks],
-    farm_ash:         ["farm_resources", :ash_trees],
-    farm_birch:       ["farm_resources", :birch_trees],
-    farm_spruce:      ["farm_resources", :spruce_trees],
-    farm_sunflowers:  ["farm_resources", :sunflowers],
-    fight_chickens:   ["fight_monsters", :chickens],
-    fight_pigs:       ["fight_monsters", :pigs],
-    fight_goblins:    ["fight_monsters", :goblins],
+    farm_copper: ["farm_resources", :copper_rocks],
+    farm_iron: ["farm_resources", :iron_rocks],
+    farm_coal: ["farm_resources", :coal_rocks],
+    farm_ash: ["farm_resources", :ash_trees],
+    farm_birch: ["farm_resources", :birch_trees],
+    farm_spruce: ["farm_resources", :spruce_trees],
+    farm_sunflowers: ["farm_resources", :sunflowers],
+    fight_chickens: ["fight_monsters", :chickens],
+    fight_pigs: ["fight_monsters", :pigs],
+    fight_goblins: ["fight_monsters", :goblins],
     fight_wolverines: ["fight_monsters", :wolverines],
-    fish_gudgeon:     ["farm_resources", :gudgeon],
-    task_cycle:       ["task_cycle"],
-    rest_at_bank:     ["rest_at_bank"]
+    fish_gudgeon: ["farm_resources", :gudgeon],
+    task_cycle: ["task_cycle"],
+    rest_at_bank: ["rest_at_bank"]
   }
 
   def goals, do: Map.keys(@goals)
@@ -36,10 +36,12 @@ defmodule ArtifactsMmog.Runner do
   """
   def run(char_name, goal, opts \\ []) when is_atom(goal) or is_binary(goal) do
     goal = if is_binary(goal), do: String.to_existing_atom(goal), else: goal
+
     unless Map.has_key?(@goals, goal) do
       raise ArgumentError, "unknown goal #{inspect(goal)}, valid: #{inspect(Map.keys(@goals))}"
     end
-    max  = Keyword.get(opts, :max_iterations, :infinity)
+
+    max = Keyword.get(opts, :max_iterations, :infinity)
     delay = Keyword.get(opts, :delay_ms, 500)
     loop(char_name, goal, 0, max, delay)
   end
@@ -47,6 +49,7 @@ defmodule ArtifactsMmog.Runner do
   # ---------------------------------------------------------------------------
 
   defp loop(_, _, n, max, _) when is_integer(max) and n >= max, do: {:ok, n}
+
   defp loop(char_name, goal, n, max, delay) do
     IO.puts("[Runner] #{char_name} | #{goal} | iteration #{n + 1}")
 
@@ -76,9 +79,8 @@ defmodule ArtifactsMmog.Runner do
     case @goals[goal] do
       ["farm_resources", zone] -> [["farm_resources", char_name, Domain.zone_id(zone)]]
       ["fight_monsters", zone] -> [["fight_monsters", char_name, Domain.zone_id(zone)]]
-      ["task_cycle"]           -> [["task_cycle", char_name]]
-      ["rest_at_bank"]         -> [["rest_at_bank", char_name]]
+      ["task_cycle"] -> [["task_cycle", char_name]]
+      ["rest_at_bank"] -> [["rest_at_bank", char_name]]
     end
   end
-
 end

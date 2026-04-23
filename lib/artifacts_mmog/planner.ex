@@ -16,10 +16,10 @@ defmodule ArtifactsMmog.Planner do
   Returns `{:ok, results}` or `{:error, reason}`.
   """
   def run(char_name, tasks) do
-    with {:ok, char}     <- fetch_char(char_name),
-         domain_json     <- Domain.build(char, tasks),
+    with {:ok, char} <- fetch_char(char_name),
+         domain_json <- Domain.build(char, tasks),
          {:ok, plan_json} <- Taskweft.plan(domain_json),
-         {:ok, plan}     <- Jason.decode(plan_json) do
+         {:ok, plan} <- Jason.decode(plan_json) do
       execute(char_name, plan)
     end
   end
@@ -47,9 +47,10 @@ defmodule ArtifactsMmog.Planner do
     case API.my_characters() do
       %{"data" => chars} when is_list(chars) ->
         case Enum.find(chars, &(&1["name"] == name)) do
-          nil  -> {:error, "character #{name} not found"}
+          nil -> {:error, "character #{name} not found"}
           char -> {:ok, char}
         end
+
       other ->
         {:error, "API error: #{inspect(other)}"}
     end
@@ -57,16 +58,17 @@ defmodule ArtifactsMmog.Planner do
 
   defp dispatch(name, "a_move", [_char, zone_id]) do
     zone_int = trunc_zone(zone_id)
+
     case Domain.zone_coords(zone_int) do
       {x, y} -> API.move(name, x, y)
-      nil    -> %{"error" => "unknown zone id #{zone_id}"}
+      nil -> %{"error" => "unknown zone id #{zone_id}"}
     end
   end
 
-  defp dispatch(name, "a_gather",        [_char | _]), do: API.gather(name)
-  defp dispatch(name, "a_fight",         [_char | _]), do: API.fight(name)
-  defp dispatch(name, "a_rest",          [_char | _]), do: API.rest(name)
-  defp dispatch(name, "a_accept_task",   [_char | _]), do: API.accept_task(name)
+  defp dispatch(name, "a_gather", [_char | _]), do: API.gather(name)
+  defp dispatch(name, "a_fight", [_char | _]), do: API.fight(name)
+  defp dispatch(name, "a_rest", [_char | _]), do: API.rest(name)
+  defp dispatch(name, "a_accept_task", [_char | _]), do: API.accept_task(name)
   defp dispatch(name, "a_complete_task", [_char | _]), do: API.complete_task(name)
 
   defp dispatch(name, "a_bank_deposit", [_char | _]) do
@@ -85,5 +87,6 @@ defmodule ArtifactsMmog.Planner do
   defp maybe_cooldown(%{"data" => %{"cooldown" => %{"remaining_seconds" => secs}}})
        when is_number(secs) and secs > 0,
        do: Process.sleep(trunc(secs * 1000))
+
   defp maybe_cooldown(_), do: :ok
 end

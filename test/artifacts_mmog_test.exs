@@ -7,20 +7,38 @@ defmodule ArtifactsMmogTest do
   end
 
   test "Domain.build/2 includes rest_at_bank method" do
-    char = %{"name" => "hero", "hp" => 50, "max_hp" => 100, "x" => 0, "y" => 0,
-             "task" => "", "inventory" => [], "inventory_max_items" => 100}
+    char = %{
+      "name" => "hero",
+      "hp" => 50,
+      "max_hp" => 100,
+      "x" => 0,
+      "y" => 0,
+      "task" => "",
+      "inventory" => [],
+      "inventory_max_items" => 100
+    }
+
     json = ArtifactsMmog.Domain.build(char, [["rest_at_bank", "hero"]])
     {:ok, decoded} = Jason.decode(json)
     assert Map.has_key?(decoded["methods"], "rest_at_bank")
   end
 
   test "Domain.build/2 produces valid JSON with correct name and hp variable" do
-    char = %{"name" => "hero", "hp" => 80, "max_hp" => 100, "x" => 0, "y" => 0,
-             "task" => "", "inventory" => [], "inventory_max_items" => 100}
+    char = %{
+      "name" => "hero",
+      "hp" => 80,
+      "max_hp" => 100,
+      "x" => 0,
+      "y" => 0,
+      "task" => "",
+      "inventory" => [],
+      "inventory_max_items" => 100
+    }
+
     json = ArtifactsMmog.Domain.build(char, [])
     assert {:ok, decoded} = Jason.decode(json)
     assert decoded["name"] == "artifacts_mmog"
-    hp_var = Enum.find(decoded["variables"], & &1["name"] == "hp")
+    hp_var = Enum.find(decoded["variables"], &(&1["name"] == "hp"))
     assert hp_var["init"]["hero"] == 80
   end
 end

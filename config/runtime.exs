@@ -11,6 +11,7 @@ if File.exists?(dotenv) do
     case String.split(line, "=", parts: 2) do
       [k, v] when byte_size(k) > 0 ->
         if is_nil(System.get_env(k)), do: System.put_env(k, v)
+
       _ ->
         :ok
     end
