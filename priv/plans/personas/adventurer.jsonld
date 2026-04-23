@@ -115,7 +115,7 @@
       ]
     },
     "adventurer_episode": {
-      "description": "One full adventurer episode. Accepts a task if none is active, fights goblins, farms copper, banks, then completes the task.",
+      "description": "One full adventurer episode. Accepts a task if none is active, fights chickens, farms copper, banks, then completes the task.",
       "params": ["char"],
       "alternatives": [
         {

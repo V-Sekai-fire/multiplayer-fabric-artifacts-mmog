@@ -25,8 +25,8 @@ still green.
 mix deps.get
 mix test                                       # run ExUnit suite
 mix artifacts_mmog.goals                       # list available goals
-ARTIFACTS_TOKEN=... mix artifacts_mmog.run Aria fight_chickens
-ARTIFACTS_TOKEN=... mix artifacts_mmog.run Aria farm_copper 10
+ARTIFACTS_MMOG_KEY=... mix artifacts_mmog.run Aria fight_chickens
+ARTIFACTS_MMOG_KEY=... mix artifacts_mmog.run Aria farm_copper 10
 ```
 
 ## Mix tasks
@@ -41,7 +41,7 @@ ARTIFACTS_TOKEN=... mix artifacts_mmog.run Aria farm_copper 10
 ## Environment
 
 ```
-ARTIFACTS_TOKEN   Your ArtifactsMMO API bearer token
+ARTIFACTS_MMOG_KEY   Your ArtifactsMMO API bearer token
 ```
 
 ## Design notes

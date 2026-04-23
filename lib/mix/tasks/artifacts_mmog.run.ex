@@ -8,8 +8,8 @@ defmodule Mix.Tasks.ArtifactsMmog.Run do
 
   Examples:
 
-      ARTIFACTS_TOKEN=... mix artifacts_mmog.run Aria fight_chickens
-      ARTIFACTS_TOKEN=... mix artifacts_mmog.run Aria farm_copper 10
+      ARTIFACTS_MMOG_KEY=... mix artifacts_mmog.run Aria fight_chickens
+      ARTIFACTS_MMOG_KEY=... mix artifacts_mmog.run Aria farm_copper 10
 
   Run `mix artifacts_mmog.goals` to list available goals.
   """

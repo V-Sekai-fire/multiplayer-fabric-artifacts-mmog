@@ -13,11 +13,11 @@ defmodule ArtifactsMmog do
       mix artifacts_mmog.goals
 
       # Run a continuous loop (Ctrl-C to stop)
-      ARTIFACTS_TOKEN=... mix artifacts_mmog.run Aria fight_chickens
+      ARTIFACTS_MMOG_KEY=... mix artifacts_mmog.run Aria fight_chickens
 
       # Run N iterations
-      ARTIFACTS_TOKEN=... mix artifacts_mmog.run Aria farm_copper 10
+      ARTIFACTS_MMOG_KEY=... mix artifacts_mmog.run Aria farm_copper 10
 
-  Set `ARTIFACTS_TOKEN` to your ArtifactsMMO API bearer token.
+  Set `ARTIFACTS_MMOG_KEY` to your ArtifactsMMO API bearer token.
   """
 end

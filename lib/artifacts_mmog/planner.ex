@@ -74,7 +74,7 @@ defmodule ArtifactsMmog.Planner do
   end
 
   defp dispatch(name, action, args) do
-    IO.puts("[Planner] unknown action: #{action}(#{Enum.join(inspect(args), ", ")})")
+    IO.puts("[Planner] unknown action: #{action}(#{inspect(args)})")
     %{"error" => "unknown action #{action}", "character" => name}
   end
 

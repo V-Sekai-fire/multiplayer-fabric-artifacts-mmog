@@ -2,22 +2,28 @@ defmodule ArtifactsMmog.API do
   @moduledoc """
   HTTP client for the ArtifactsMMO REST API.
   Base URL: https://api.artifactsmmo.com
-  Auth: Bearer token via ARTIFACTS_TOKEN env var.
+  Auth: Bearer token via ARTIFACTS_MMOG_KEY env var.
   """
 
   @base_url "https://api.artifactsmmo.com"
 
   defp headers do
-    token = System.get_env("ARTIFACTS_TOKEN", "")
+    token = System.get_env("ARTIFACTS_MMOG_KEY", "")
     [{"Authorization", "Bearer #{token}"}, {"Content-Type", "application/json"}]
   end
 
   defp get(path, params \\ []) do
-    Req.get!("#{@base_url}#{path}", headers: headers(), params: params).body
+    case Req.get("#{@base_url}#{path}", headers: headers(), params: params, retry: false) do
+      {:ok, resp}         -> resp.body
+      {:error, exception} -> %{"error" => Exception.message(exception)}
+    end
   end
 
   defp post(path, body \\ %{}) do
-    Req.post!("#{@base_url}#{path}", headers: headers(), json: body).body
+    case Req.post("#{@base_url}#{path}", headers: headers(), json: body, retry: false) do
+      {:ok, resp}         -> resp.body
+      {:error, exception} -> %{"error" => Exception.message(exception)}
+    end
   end
 
   # --- Server ---
