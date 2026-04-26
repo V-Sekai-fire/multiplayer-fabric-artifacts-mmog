@@ -8,8 +8,20 @@ defmodule ArtifactsMmog.API do
   @base_url "https://api.artifactsmmo.com"
 
   defp headers do
-    token = System.get_env("ARTIFACTS_MMOG_KEY", "")
-    [{"Authorization", "Bearer #{token}"}, {"Content-Type", "application/json"}]
+    [{"Authorization", "Bearer #{api_key()}"}, {"Content-Type", "application/json"}]
+  end
+
+  defp api_key do
+    case System.get_env("ARTIFACTS_MMOG_KEY") do
+      nil ->
+        case ArtifactsMmog.Keystore.get() do
+          {:ok, token} -> token
+          _ -> ""
+        end
+
+      token ->
+        token
+    end
   end
 
   defp get(path, params \\ []) do

@@ -8,8 +8,12 @@ defmodule Mix.Tasks.ArtifactsMmog.Run do
 
   Examples:
 
-      ARTIFACTS_MMOG_KEY=... mix artifacts_mmog.run Aria fight_chickens
-      ARTIFACTS_MMOG_KEY=... mix artifacts_mmog.run Aria farm_copper 10
+      mix artifacts_mmog.run Aria fight_chickens
+      mix artifacts_mmog.run Aria farm_copper 10
+
+  The API token is read from the OS keychain. Store it once with:
+
+      mix artifacts_mmog.key set
 
   Run `mix artifacts_mmog.goals` to list available goals.
   """
