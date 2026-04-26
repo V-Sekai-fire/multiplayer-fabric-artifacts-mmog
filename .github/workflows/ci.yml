@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   test:
-    name: mix test
+    name: Artifacts MMOG CI
     runs-on: ubuntu-latest
 
     steps:
