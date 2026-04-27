@@ -16,7 +16,8 @@ defmodule ArtifactsMmog.MixProject do
 
   defp deps do
     [
-      {:taskweft, github: "V-Sekai-fire/multiplayer-fabric-taskweft"},
+      {:taskweft, path: "../multiplayer-fabric-taskweft"},
+      {:ex_mcp, github: "azmaveth/ex_mcp"},
       {:req, "~> 0.5"},
       {:jason, "~> 1.4"}
     ]
